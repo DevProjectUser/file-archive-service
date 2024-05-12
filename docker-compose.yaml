@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: file_service_db
+      POSTGRES_USER: file_service_user
+      POSTGRES_PASSWORD: file_service_password
+    ports:
+      - "5432:5432"
