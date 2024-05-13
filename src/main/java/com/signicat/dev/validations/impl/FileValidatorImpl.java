@@ -15,11 +15,15 @@ public class FileValidatorImpl implements FileValidator {
      * @param files
      */
     public void validateFileInput(List<MultipartFile> files) {
-        files.forEach(file -> {
-            if (isUnsafeFileExtension(file.getOriginalFilename()) ||
-                    file.isEmpty()) {
-                throw new FileInputNotValidException("Can't process request. One of the files is empty or has a unsafe extension");
-            }
-        });
+        if (files == null || files.isEmpty()) {
+            throw new FileInputNotValidException("Can't process request. Files are empty");
+        } else {
+            files.forEach(file -> {
+                if (isUnsafeFileExtension(file.getOriginalFilename()) ||
+                        file.isEmpty()) {
+                    throw new FileInputNotValidException("Can't process request. One of the files is empty or has a unsafe extension");
+                }
+            });
+        }
     }
 }
