@@ -1,5 +1,6 @@
 package com.signicat.dev.controller;
 
+import com.signicat.dev.enums.ArchiveType;
 import com.signicat.dev.service.archival.FileArchivalService;
 import com.signicat.dev.validations.FileValidator;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+import static com.signicat.dev.constants.ApplicationConstants.FILE_ARCHIVE_CONTENT_DISPOSITION;
+import static com.signicat.dev.constants.ApplicationConstants.FILE_ARCHIVE_MEDIA_TYPE;
+
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
@@ -27,10 +31,14 @@ public class FileArchiveController {
     @PostMapping("/archive")
     public ResponseEntity<?> archiveFiles(@RequestParam("files") List<MultipartFile> files, @RequestParam("format") String archiveFormat, HttpServletRequest request) throws Exception {
         fileValidator.validateFileInput(files);
+        if (archiveFormat == null || archiveFormat.isEmpty()) {
+            archiveFormat = ArchiveType.ZIP.getExtension();
+        }
         ByteArrayOutputStream byteArrayOutputStream = fileArchivalService.archiveFiles(files, archiveFormat, request.getRemoteAddr());
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=files-archive." + archiveFormat)
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        FILE_ARCHIVE_CONTENT_DISPOSITION + archiveFormat)
+                .contentType(MediaType.parseMediaType(FILE_ARCHIVE_MEDIA_TYPE))
                 .body(byteArrayOutputStream.toByteArray());
     }
 }

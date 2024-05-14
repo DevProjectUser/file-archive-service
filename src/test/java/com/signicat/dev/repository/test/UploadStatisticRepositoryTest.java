@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,14 +29,15 @@ public class UploadStatisticRepositoryTest {
         uploadStatisticRepository.save(uploadStatistic);
 
         // when
-        UploadStatistic found = uploadStatisticRepository
+        Optional<UploadStatistic> found = uploadStatisticRepository
                 .findByIpAddressAndDate(uploadStatistic.getIpAddress(),
                         uploadStatistic.getDate());
 
         // then
-        assertThat(found.getIpAddress()).isEqualTo(uploadStatistic.getIpAddress());
-        assertThat(found.getDate()).isEqualTo(uploadStatistic.getDate());
-        assertThat(found.getFileCount()).isEqualTo(uploadStatistic.getFileCount());
+        assertThat(found).isPresent();
+        assertThat(found.get().getIpAddress()).isEqualTo(uploadStatistic.getIpAddress());
+        assertThat(found.get().getDate()).isEqualTo(uploadStatistic.getDate());
+        assertThat(found.get().getFileCount()).isEqualTo(uploadStatistic.getFileCount());
     }
 
     @Test
@@ -48,11 +50,11 @@ public class UploadStatisticRepositoryTest {
         uploadStatisticRepository.save(uploadStatistic);
 
         // when
-        UploadStatistic found = uploadStatisticRepository
+        Optional<UploadStatistic> found = uploadStatisticRepository
                 .findByIpAddressAndDate("192.168.1.1", LocalDate.now());
 
         // then
-        assertThat(found).isNull();
+        assertThat(found).isEmpty();
     }
 
     @Test
@@ -64,11 +66,11 @@ public class UploadStatisticRepositoryTest {
         uploadStatisticRepository.save(uploadStatistic);
 
         // when
-        UploadStatistic found = uploadStatisticRepository
+        Optional<UploadStatistic> found = uploadStatisticRepository
                 .findByIpAddressAndDate(null, null);
 
         // then
-        assertThat(found).isNull();
+        assertThat(found).isEmpty();
     }
 
 }

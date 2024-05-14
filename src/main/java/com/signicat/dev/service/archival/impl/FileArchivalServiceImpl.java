@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,40 +36,52 @@ public class FileArchivalServiceImpl implements FileArchivalService {
 
 
     @Transactional(rollbackFor = Exception.class)
-    public ByteArrayOutputStream archiveFiles(List<MultipartFile> files, String archiveFormat, String ipAddress) throws FairUsageLimitExpiredException {
-        ArchiveType archiveType = ArchiveType.fromValue(archiveFormat);
-        ArchivalStrategy archivalStrategy = archivingStrategyMap.getOrDefault(archiveType, null);
+    public ByteArrayOutputStream archiveFiles(List<MultipartFile> files, String archiveFormat, String ipAddress) {
         try {
+            ArchiveType archiveType = ArchiveType.fromValue(archiveFormat);
+            ArchivalStrategy archivalStrategy = archivingStrategyMap.get(archiveType);
             recordUploadStats(ipAddress, files.size());
-            if (archivalStrategy == null) {
-                logger.error("Archival strategy not found for {}", archiveFormat);
-                throw new ArchivalStrategyNotFoundException(String.format("Archival format provided is not supported : %s", archiveFormat));
-            }
             logger.info("Archiving files using {}", archivalStrategy.getArchiveType());
             return archivalStrategy.archiveFiles(files);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            switch (e.getClass().getSimpleName()) {
+                case "ArchivalStrategyNotFoundException":
+                    throw (ArchivalStrategyNotFoundException) e;
+                case "FairUsageLimitExpiredException":
+                    throw (FairUsageLimitExpiredException) e;
+                default:
+                    logger.error("Error occurred during file processing", e);
+                    throw new RuntimeException(e.getMessage());
+            }
         }
     }
 
-    public void recordUploadStats(String ipAddress, int fileCount) throws FairUsageLimitExpiredException {
+    private void recordUploadStats(String ipAddress, int fileCount) {
+        try {
+            Optional<UploadStatistic> optionalUploadStatistic = uploadStatisticRepository.findByIpAddressAndDate(ipAddress, LocalDate.now());
 
-        UploadStatistic uploadStatistic = uploadStatisticRepository.findByIpAddressAndDate(ipAddress, LocalDate.now());
-        if (uploadStatistic != null) {
-            int totalFileCount = uploadStatistic.getFileCount() + fileCount;
-            if (totalFileCount >= fairUsageLimit) {
+            UploadStatistic uploadStatistic = optionalUploadStatistic.orElseGet(() -> {
+                UploadStatistic newUploadStatistic = new UploadStatistic();
+                newUploadStatistic.setIpAddress(ipAddress);
+                newUploadStatistic.setDate(LocalDate.now());
+                return newUploadStatistic;
+            });
+
+            int currentFileCount = uploadStatistic.getFileCount();
+            int fileCountRemaining = fairUsageLimit - currentFileCount;
+            if (fileCount > fileCountRemaining) {
                 logger.error("Fair usage limit exceeded for IP Address: {}", ipAddress);
-                throw new FairUsageLimitExpiredException("Fair usage limit exceeded for IP Address for today : " + ipAddress);
+                String message = String.format("Fair usage limit exceeded for IP Address %s, %s remaining file uploads for today out of maximum limit %s", ipAddress, fileCountRemaining, fairUsageLimit);
+                throw new FairUsageLimitExpiredException(message);
             }
-            uploadStatistic.setFileCount(totalFileCount);
-            uploadStatisticRepository.save(uploadStatistic);
-        } else {
-            uploadStatistic = new UploadStatistic();
-            uploadStatistic.setIpAddress(ipAddress);
-            uploadStatistic.setDate(LocalDate.now());
-            uploadStatistic.setFileCount(fileCount);
-            uploadStatisticRepository.save(uploadStatistic);
-        }
 
+            uploadStatistic.setFileCount(currentFileCount + fileCount);
+            uploadStatisticRepository.save(uploadStatistic);
+        } catch (FairUsageLimitExpiredException e) {
+            throw new FairUsageLimitExpiredException(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error occurred while saving upload stats to database", e);
+            throw new RuntimeException("Error occurred while recording upload stats", e);
+        }
     }
 }

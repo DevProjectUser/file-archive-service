@@ -1,5 +1,6 @@
 package com.signicat.dev.enums;
 
+import com.signicat.dev.exception.ArchivalStrategyNotFoundException;
 import lombok.Getter;
 
 @Getter
@@ -21,6 +22,6 @@ public enum ArchiveType {
                 return archiveType;
             }
         }
-        return ArchiveType.ZIP;
+        throw new ArchivalStrategyNotFoundException("Archival format provided is not supported : " + value);
     }
 }
