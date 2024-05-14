@@ -54,4 +54,5 @@ public class FileArchiveControllerTest {
                         .param("format", "zip"))
                 .andExpect(status().isBadRequest());
     }
+
 }

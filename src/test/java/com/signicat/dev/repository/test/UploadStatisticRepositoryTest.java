@@ -70,4 +70,5 @@ public class UploadStatisticRepositoryTest {
         // then
         assertThat(found).isNull();
     }
+
 }
