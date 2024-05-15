@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.signicat.dev.constants.ApplicationConstants.FAIR_USAGE_LIMIT_FOR_DAY;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -71,7 +73,7 @@ public class FileArchivalServiceImpl implements FileArchivalService {
             int fileCountRemaining = fairUsageLimit - currentFileCount;
             if (fileCount > fileCountRemaining) {
                 logger.error("Fair usage limit exceeded for IP Address: {}", ipAddress);
-                String message = String.format("Fair usage limit exceeded for IP Address %s, %s remaining file uploads for today out of maximum limit %s", ipAddress, fileCountRemaining, fairUsageLimit);
+                String message = String.format(FAIR_USAGE_LIMIT_FOR_DAY, ipAddress, fileCountRemaining, fairUsageLimit);
                 throw new FairUsageLimitExpiredException(message);
             }
 

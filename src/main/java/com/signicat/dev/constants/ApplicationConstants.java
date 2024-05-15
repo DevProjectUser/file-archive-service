@@ -12,6 +12,7 @@ public class ApplicationConstants {
     public static final String UPLOADED_FILE_EXCEED_UPLOAD_LIMIT = "Uploaded file(s) exceed upload limit!";
     public static final String EMPTY_FILES_MESSAGE = "Can't process request. Files are empty";
     public static final String FAIR_USAGE_LIMIT_EXCEEDED = "Can't process request. Fair usage limit exceeded. Maximum allowed files are %s per request";
+    public static final String FAIR_USAGE_LIMIT_FOR_DAY = "Fair usage limit exceeded for IP Address %s, %s remaining file uploads for today out of maximum limit %s";
     public static final String EMPTY_FILE_OR_UNSAFE_EXTENSION_ERROR_MESSAGE = "Can't process request. One of the files is empty or has a unsafe extension";
     public static final String APPLICATION_ERROR = "Application error occurred!";
     public static final String VALID_FILE_NAME = "test.txt";

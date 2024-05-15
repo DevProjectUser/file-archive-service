@@ -74,16 +74,4 @@ public class GlobalExceptionHandler {
                                 .build()
                 );
     }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleException(Exception exception) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(
-                        ErrorResponseDTO.builder()
-                                .message(APPLICATION_ERROR)
-                                .details(exception.getMessage())
-                                .build()
-                );
-    }
 }
